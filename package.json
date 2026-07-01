@@ -1,0 +1,18 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "preinstall": "node --input-type=commonjs -e \"const fs=require('fs');['package-lock.json','yarn.lock'].forEach(f=>{try{fs.unlinkSync(require('path').join(__dirname,'../..',f))}catch{}});if(!process.env.npm_config_user_agent.includes('pnpm')){console.error('Use pnpm instead');process.exit(1)}\"",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "build:desktop": "node scripts/build-desktop.mjs",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+  },
+  "private": true,
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "prettier": "^3.8.4",
+    "typescript": "~5.9.3"
+  }
+}

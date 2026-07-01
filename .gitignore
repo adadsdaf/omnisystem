@@ -1,0 +1,14 @@
+# استبعاد مجلدات الحزم والمكتبات
+node_modules/
+.pnpm-store/
+.vite/
+dist/
+build/
+release/
+
+# استبعاد ملفات البيئة والأنظمة
+.env
+.env.local
+.env.*.local
+.DS_Store
+Thumbs.db

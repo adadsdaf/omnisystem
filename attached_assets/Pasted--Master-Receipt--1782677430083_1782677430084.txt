@@ -1,0 +1,104 @@
+ اريد منك ان تقوم بحل كل هذه الاخطاء وان تقوم بستغير بيئة المشروع من اجل ان يكون مطابق للمكتبات والحزم والادوات التي تتلام مع جهازي من اجل تسهيل تثبيت تطبيق سطح المكتب والسيرفر والواجهات الاماميه بكل سهوله مع الحفاظ على كل المهام والوظائف وتجنب المسشاكل والاخطاء والمتاعب ## **ملخص شامل لجميع الأخطاء في النظام**
+
+---
+
+### **أخطاء واجهة الويب (pos-system)**
+
+**ملفات React Components:**
+| الملف | السطر | نوع الخطأ | الرسالة |
+|--------|-------|-----------|---------|
+| `pages/pos.tsx` | 183 | Toast | "لم يتم العثور على المنتج رقم X" |
+| `pages/pos.tsx` | 276 | Toast | "فشل طباعة قسم X" |
+| `pages/pos.tsx` | 396 | Toast | "فشل في حفظ الفاتورة" |
+| `pages/login.tsx` | 32 | Toast | بدون رسالة محددة |
+| `pages/users.tsx` | 38,44,53 | Toast | "فشل في التحديث/الإضافة/الحذف" |
+| `pages/customers.tsx` | 33,38,47 | Toast | "فشل في التحديث/الإضافة/الحذف" |
+| `pages/categories.tsx` | 33,38,47 | Toast | "فشل في التحديث/الإضافة/الحذف" |
+| `pages/products.tsx` | 51,56,65 | Toast | "فشل في التحديث/الإضافة/الحذف" |
+| `pages/orders.tsx` | 26 | Toast | "فشل في الحذف" |
+| `pages/settings.tsx` | 70,785 | Toast | "فشل في الحفظ" |
+| `components/auth-provider.tsx` | 49 | Error | "useAuth must be used within an AuthProvider" |
+| `components/ui/chart.tsx` | 29 | Error | "useChart must be used within a ChartContainer" |
+| `components/ui/carousel.tsx` | 37 | Error | "useCarousel must be used within Carousel" |
+| `components/ui/form.tsx` | 46,50 | Error | "useFormField should be used within FormField" |
+| `components/ui/sidebar.tsx` | 50 | Error | "useSidebar must be used within SidebarProvider" |
+
+---
+
+### **أخطاء الخادم (api-server)**
+
+**ملفات Routes:**
+| المسار | الملف | السطر | نوع الخطأ | الرسالة |
+|-------|-------|-------|-----------|---------|
+| `/auth/login` | auth.ts | 20 | 400 | "بيانات ناقصة" |
+| `/auth/login` | auth.ts | 25,30 | 401 | "اسم المستخدم أو كلمة المرور غير صحيحة" |
+| `/auth/me` | auth.ts | 42 | 401 | "غير مصرح" |
+| `/users` | users.ts | 11,18,29,43 | 403 | "غير مصرح" |
+| `/users` | users.ts | 20 | 400 | "بيانات ناقصة" |
+| `/products/:id` | products.ts | 30 | 404 | "غير موجود" |
+| `/products` | products.ts | 36,53,69 | 401 | "غير مصرح" |
+| `/products` | products.ts | 38 | 400 | "بيانات ناقصة" |
+| `/orders` | orders.ts | 63 | 401 | "غير مصرح" |
+| `/orders` | orders.ts | 65 | 400 | "لا توجد منتجات" |
+| `/orders/:id` | orders.ts | 116 | 404 | "غير موجود" |
+| `/orders/:id` | orders.ts | 123 | 403 | "غير مصرح" |
+| `/customers` | customers.ts | 20,30,43 | 401 | "غير مصرح" |
+| `/customers` | customers.ts | 22 | 400 | "الاسم مطلوب" |
+| `/categories` | categories.ts | 14,24,33 | 401 | "غير مصرح" |
+| `/categories` | categories.ts | 16 | 400 | "الاسم مطلوب" |
+| `/printers/print` | printers.ts | 72 | Error | "TCP print timeout" |
+| `/print-config` | printer-settings.ts, print-config.ts | 46,21,33,45,76,90,105 | 403 | "غير مصرح" |
+| `/print-config` | print-config.ts | 23 | 400 | "بيانات ناقصة" |
+| `/print-config` | print-config.ts | 39,99 | 404 | "غير موجود" |
+
+**ملفات النظام:**
+| الملف | السطر | الخطأ |
+|-------|-------|------|
+| index.ts | 7 | "PORT environment variable is required but was not provided" |
+| index.ts | 15 | "Invalid PORT value: X" |
+| index.ts | 20 | "Error listening on port" (logger) |
+| sqlite.ts | 168-176 | مستهدف بهدوء بدون إبلاغ |
+| printers.ts | 111-112 | "فشلت الطباعة" أو رسالة الخطأ الأصلية |
+
+---
+
+### **أخطاء بناء التطبيق**
+
+| الملف | السطر | الخطأ |
+|-------|-------|------|
+| `vite.config.ts` | 10-12 | "PORT environment variable is required but was not provided" |
+| `vite.config.ts` | 17-18 | "Invalid PORT value: X" |
+| `vite.config.ts` | 24-25 | "BASE_PATH environment variable is required but was not provided" |
+| `build-desktop.mjs` | 71-88 | يستخدم البناء القديم عند الفشل بدون تحذير |
+| `build-desktop.mjs` | 123-125 | بناء الأيقونات يُتجاهل الفشل |
+| `electron-app/src/main/index.js` | 207 | لا يوقف التطبيق عند فشل الخادم |
+| `electron-app/src/main/index.js` | 198 | فشل التحميل يُسجل فقط |
+
+---
+
+### **الحزم المُعرّفة في الجهاز (pnpm-workspace.yaml catalog)**
+
+| الحزمة | الإصدار |
+|--------|---------|
+| @replit/vite-plugin-cartographer | ^0.5.21 |
+| @replit/vite-plugin-dev-banner | ^0.1.1 |
+| @replit/vite-plugin-runtime-error-modal | ^0.0.6 |
+| @tailwindcss/vite | ^4.1.14 |
+| @tanstack/react-query | ^5.90.21 |
+| @types/node | ^25.3.3 |
+| @types/react | ^19.2.0 |
+| @types/react-dom | ^19.2.0 |
+| @vitejs/plugin-react | ^5.0.4 |
+| class-variance-authority | ^0.7.1 |
+| clsx | ^2.1.1 |
+| drizzle-orm | ^0.45.2 |
+| framer-motion | ^12.23.24 |
+| lucide-react | ^0.545.0 |
+| react | 19.1.0 |
+| react-dom | 19.1.0 |
+| tailwind-merge | ^3.3.1 |
+| tailwindcss | ^4.1.14 |
+| tsx | ^4.21.0 |
+| vite | ^7.3.2 |
+| wouter | ^3.3.5 |
+| zod | ^3.25.76 | ,وبعد الانتهاء من تحميل ملفات المكتبات والحزم المستخدمه في تشغيل المشروع واصلاح كل الاخطاء اريد منك ان تحتفظ بهذه الملفات والمكتبات من خلال ظغطها من خلال استخدام عملية الظغط lossless compression من اجل الحفاظ على كل البيانات المهمه وعند تنزيلها وفك ضغطها لا نفقد اي شيئ منها مع اضافة ملف يشرح كيف افك ضغط الملفات هذه وفي اي مسار مع تجنب الاخطاء والمشاكل

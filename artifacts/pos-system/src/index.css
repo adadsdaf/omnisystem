@@ -1,0 +1,780 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-primary-border: var(--sidebar-primary-border);
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent-border: var(--sidebar-accent-border);
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --font-sans: var(--app-font-sans);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  --background: 210 40% 98%; /* #f8fafc */
+  --foreground: 222 47% 11%;
+  
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 214 52% 25%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 214 32% 91%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 214 32% 91%;
+  
+  /* Primary Navy: #1e3a5f */
+  --primary: 214 52% 25%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  
+  /* Accent Amber: #f59e0b */
+  --accent: 38 92% 50%;
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --sidebar: 214 52% 25%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 214 52% 20%;
+  --sidebar-primary: 38 92% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 214 52% 30%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-ring: 214 52% 40%;
+  
+  --app-font-sans: 'Tajawal', sans-serif;
+  --radius: 0.5rem;
+  
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.dark {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+  --ring: 214 52% 50%;
+  
+  --card: 222 47% 11%;
+  --card-foreground: 210 40% 98%;
+  --card-border: 217 33% 17%;
+  
+  --popover: 222 47% 11%;
+  --popover-foreground: 210 40% 98%;
+  --popover-border: 217 33% 17%;
+  
+  --primary: 214 52% 40%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  
+  --accent: 38 92% 50%;
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  
+  --sidebar: 222 47% 11%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 217 33% 17%;
+  --sidebar-primary: 38 92% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 33% 17%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-ring: 214 52% 40%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* ─── Print Styles ─────────────────────────────────── */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* إخفاء كل شيء بالـ visibility لا بالـ display
+     حتى لا تنهار البنية — الـ fixed container يظهر فوق الكل */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    visibility: hidden !important;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  /* إظهار منطقة الطباعة وكل أبنائها */
+  .hidden-print-container {
+    display: block !important;
+    visibility: visible !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: white !important;
+    z-index: 99999 !important;
+  }
+
+  .hidden-print-container *,
+  .hidden-print-container *::before,
+  .hidden-print-container *::after {
+    visibility: visible !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-page {
+    display: block !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  .print-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  /* تأكيد ظهور الخطوط الفاصلة */
+  .receipt-divider-dots { border-color: #000 !important; }
+  .receipt-divider-solid { border-color: #000 !important; }
+  .receipt-divider-double { border-color: #000 !important; }
+  .receipt-table thead tr { border-color: #000 !important; }
+  .receipt-table tbody tr { border-color: #ccc !important; }
+  .dept-slip-th-row { border-color: #000 !important; }
+  .dept-slip-item-row { border-color: #ccc !important; }
+}
+
+/* ─── Receipt Slip Styles (used in both print and hidden container) ─── */
+.hidden-print-container {
+  display: none;
+}
+
+.receipt-slip {
+  font-family: 'Tajawal', Arial, sans-serif;
+  font-size: 12px;
+  direction: rtl;
+  text-align: right;
+  color: #000;
+  width: 100%;
+  background: white;
+  line-height: 1.45;
+  padding: 3mm 4mm 6mm 4mm;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.receipt-header {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.receipt-business-name {
+  font-size: 16px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.receipt-copy-label {
+  font-size: 10px;
+  color: #555;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.receipt-dept-title {
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+  background: transparent;
+  color: #000;
+  padding: 2px 4px;
+  margin: 4px 0;
+  border-bottom: 2px solid #000;
+}
+
+.receipt-sub {
+  font-size: 10px;
+  color: #444;
+  text-align: center;
+}
+
+.receipt-divider-dots {
+  border-top: 1px dashed #000;
+  margin: 4px 0;
+}
+
+.receipt-divider-solid {
+  border-top: 1px solid #000;
+  margin: 4px 0;
+}
+
+.receipt-divider-double {
+  border-top: 3px double #000;
+  margin: 4px 0;
+}
+
+.receipt-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: 3px 0;
+  gap: 4px;
+}
+
+.receipt-time-label {
+  font-size: 10px;
+  color: #333;
+  white-space: nowrap;
+}
+
+.receipt-invoice-title {
+  flex: 1;
+  text-align: center;
+}
+
+.receipt-invoice-title-text {
+  font-size: 13px;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.receipt-invoice-number {
+  text-align: center;
+  font-size: 11px;
+  font-weight: bold;
+  margin: 1px 0;
+}
+
+.receipt-order-type {
+  text-align: center;
+  font-size: 11px;
+  margin: 1px 0;
+}
+
+.receipt-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  margin: 2px 0;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.receipt-table thead tr {
+  border-bottom: 1px solid #000;
+}
+
+.receipt-table tbody tr {
+  border-bottom: 1px dashed #ccc;
+}
+
+.receipt-th-item {
+  text-align: right;
+  padding: 2px 0;
+  font-weight: bold;
+}
+
+.receipt-th-qty {
+  text-align: center;
+  padding: 2px 0;
+  font-weight: bold;
+  width: 30px;
+}
+
+.receipt-th-price {
+  text-align: left;
+  padding: 2px 4px;
+  font-weight: bold;
+  width: 60px;
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+.receipt-td-item {
+  text-align: right;
+  padding: 2px 0;
+}
+
+.receipt-td-qty {
+  text-align: center;
+  padding: 2px 4px;
+  width: 34px;
+}
+
+.receipt-td-price {
+  text-align: left;
+  padding: 2px 4px;
+  width: 60px;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  unicode-bidi: embed;
+  white-space: nowrap;
+}
+
+.receipt-table-dept .receipt-td-qty-big {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 900;
+  padding: 3px 0;
+  width: 40px;
+}
+
+.receipt-totals {
+  margin: 3px 0;
+  font-size: 11px;
+}
+
+.receipt-total-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 1px 0;
+}
+
+.receipt-grand-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 900;
+  border-top: 2px solid #000;
+  margin-top: 3px;
+  padding-top: 3px;
+}
+
+.receipt-grand-total span:last-child,
+.receipt-total-row span:last-child {
+  direction: ltr;
+  unicode-bidi: embed;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.receipt-cashier {
+  text-align: center;
+  font-size: 11px;
+  margin: 4px 0;
+  padding: 3px 0;
+  border-top: 1px dashed #ccc;
+}
+
+.receipt-notes-box {
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  padding: 3px 5px;
+  margin: 4px 0;
+  background: #f9f9f9;
+}
+
+.receipt-notes-label {
+  font-size: 9px;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 2px;
+}
+
+.receipt-notes-text {
+  font-size: 11px;
+}
+
+.receipt-footer-msg {
+  text-align: center;
+  font-size: 10px;
+  color: #333;
+  margin: 3px 0;
+}
+
+.receipt-no-return {
+  text-align: center;
+  font-size: 10px;
+  font-weight: bold;
+  border: 1px solid #000;
+  padding: 2px;
+  margin: 4px 0;
+}
+
+.receipt-contact {
+  text-align: center;
+  font-size: 10px;
+  color: #333;
+  margin: 2px 0;
+}
+
+/* ─── Logo in main receipt ──────────────────────── */
+.receipt-logo-wrap {
+  text-align: center;
+  margin: 3px 0 4px;
+}
+
+.receipt-logo {
+  max-width: 60mm;
+  max-height: 24mm;
+  object-fit: contain;
+  display: inline-block;
+}
+
+/* ─── Dept / Kitchen Slip Styles ───────────────── */
+.dept-slip-category-bar {
+  background: transparent;
+  color: #000;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 4px 4px 3px;
+  border-bottom: 3px solid #000;
+}
+
+/* صف: نوع الطلب | رقم الطلب الكبير | أمر صرف */
+.dept-slip-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 2px;
+  border-bottom: 1px dashed #999;
+}
+
+.dept-slip-order-type {
+  font-size: 13px;
+  font-weight: bold;
+  min-width: 40px;
+}
+
+.dept-slip-big-num {
+  font-size: 26px;
+  font-weight: 900;
+  text-align: center;
+  line-height: 1;
+}
+
+.dept-slip-amr {
+  font-size: 11px;
+  color: #444;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* صف: الوقت | التاريخ | الطاولة */
+.dept-slip-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #333;
+  padding: 2px 2px 3px;
+}
+
+.dept-slip-info-time { white-space: nowrap; }
+.dept-slip-info-date { white-space: nowrap; }
+
+.dept-slip-info-table {
+  font-weight: bold;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* جدول الأصناف */
+.dept-slip-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2px 0;
+}
+
+.dept-slip-th-row {
+  border-bottom: 1px solid #000;
+}
+
+.dept-slip-th-name {
+  text-align: right;
+  font-size: 11px;
+  padding: 2px 2px;
+  font-weight: bold;
+}
+
+.dept-slip-th-qty {
+  text-align: center;
+  font-size: 11px;
+  padding: 2px 0;
+  font-weight: bold;
+  width: 40px;
+}
+
+.dept-slip-th-price {
+  text-align: left;
+  font-size: 11px;
+  padding: 2px 4px;
+  font-weight: bold;
+  width: 60px;
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+.dept-slip-item-row {
+  border-bottom: 1px dashed #ccc;
+}
+
+.dept-slip-item-name {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 3px 2px;
+  text-align: right;
+}
+
+.dept-slip-item-qty {
+  font-size: 15px;
+  font-weight: 900;
+  text-align: center;
+  padding: 3px 0;
+  width: 40px;
+}
+
+.dept-slip-item-price {
+  font-size: 12px;
+  text-align: left;
+  padding: 4px 4px;
+  width: 60px;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  unicode-bidi: embed;
+  white-space: nowrap;
+}
+
+/* الإجمالي */
+.dept-slip-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 900;
+  padding: 4px 2px;
+  margin-top: 2px;
+}
+
+.dept-slip-total-label { }
+
+.dept-slip-total-val {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  unicode-bidi: embed;
+  white-space: nowrap;
+}
+
+/* رقم الطلب الكبير في فاتورة القسم */
+.dept-slip-big-num {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* رقم الفاتورة الرئيسية */
+.receipt-invoice-number {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* التاريخ والوقت */
+.receipt-time-label,
+.dept-slip-info-time,
+.dept-slip-info-date {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* الملاحظات */
+.dept-slip-notes {
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  padding: 3px 4px;
+  margin: 4px 0;
+  font-size: 11px;
+}
+
+.dept-slip-notes-label {
+  font-size: 9px;
+  font-weight: bold;
+  color: #555;
+  display: block;
+  margin-bottom: 1px;
+}
+
+/* اسم الكاشير */
+.dept-slip-cashier {
+  text-align: center;
+  font-size: 11px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed #ccc;
+  color: #333;
+}
+
+/* ─── Receipt Preview (on-screen in dialog) ─────── */
+.receipt-preview-container {
+  font-family: 'Tajawal', sans-serif;
+}
+
+.receipt-preview-master {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #fafafa;
+  font-size: 12px;
+}
+
+@layer utilities {
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: -1;
+  }
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: 999;
+  }
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after {
+    inset: -1px;
+  }
+}

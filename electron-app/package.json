@@ -1,0 +1,55 @@
+{
+  "name": "@workspace/omnisystem-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OmniSystem Desktop Application",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build:icons": "node resources/build-icons.mjs",
+    "build": "node ../../scripts/build-desktop.mjs",
+    "build:app": "electron-builder --win --x64 --publish never",
+    "build:app:dir": "electron-builder --win --x64 --publish never --dir",
+    "dev": "node ../../scripts/build-desktop.mjs && electron ."
+  },
+  "build": {
+    "appId": "com.omnisystem.app",
+    "productName": "OmniSystem",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/server",
+        "to": "server"
+      },
+      {
+        "from": "dist/frontend",
+        "to": "frontend"
+      }
+    ],
+    "win": {
+      "icon": "resources/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "OmniSystem"
+    }
+  },
+  "devDependencies": {
+    "electron": "38.0.0",
+    "electron-builder": "26.0.12"
+  }
+}
