@@ -160,6 +160,72 @@ function initSchema() {
       line_spacing REAL NOT NULL DEFAULT 2,
       characters_per_line INTEGER NOT NULL DEFAULT 48
     );
+
+    CREATE TABLE IF NOT EXISTS hr_departments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      budget REAL NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS hr_employees (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      employee_number TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      phone TEXT,
+      position TEXT,
+      department_id INTEGER REFERENCES hr_departments(id),
+      basic_salary REAL NOT NULL DEFAULT 0,
+      hire_date TEXT,
+      active INTEGER NOT NULL DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS hr_salaries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      employee_id INTEGER NOT NULL REFERENCES hr_employees(id) ON DELETE CASCADE,
+      month TEXT NOT NULL,
+      basic_salary REAL NOT NULL DEFAULT 0,
+      bonuses REAL NOT NULL DEFAULT 0,
+      deductions REAL NOT NULL DEFAULT 0,
+      net_salary REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending',
+      payment_date TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS hr_attendance (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      employee_id INTEGER NOT NULL REFERENCES hr_employees(id) ON DELETE CASCADE,
+      date TEXT NOT NULL,
+      check_in TEXT,
+      check_out TEXT,
+      status TEXT NOT NULL DEFAULT 'present',
+      notes TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS returns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      return_number TEXT UNIQUE NOT NULL,
+      invoice_number TEXT NOT NULL,
+      order_id INTEGER,
+      reason TEXT,
+      total_refund REAL NOT NULL DEFAULT 0,
+      payment_method TEXT NOT NULL DEFAULT 'cash',
+      customer_id INTEGER REFERENCES customers(id),
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      notes TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS return_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      return_id INTEGER NOT NULL REFERENCES returns(id) ON DELETE CASCADE,
+      product_id INTEGER,
+      product_name TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      unit_price REAL NOT NULL,
+      total REAL NOT NULL
+    );
   `);
 }
 
@@ -169,6 +235,7 @@ function runMigrations() {
   try { db.exec("ALTER TABLE order_items ADD COLUMN category_name TEXT"); } catch {}
   try { db.exec("ALTER TABLE orders ADD COLUMN order_type TEXT NOT NULL DEFAULT 'dine-in'"); } catch {}
   try { db.exec("ALTER TABLE orders ADD COLUMN table_number TEXT"); } catch {}
+  try { db.exec("ALTER TABLE printer_settings ADD COLUMN main_printer_name TEXT"); } catch {}
   // printer_settings default row
   try {
     db.exec(`INSERT OR IGNORE INTO printer_settings (id, paper_width, left_margin, right_margin, top_margin, bottom_margin, font_size, line_spacing, characters_per_line)

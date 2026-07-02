@@ -15,6 +15,8 @@ import Users from "@/pages/users";
 import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
 import PrintLog from "@/pages/print-log";
+import HR from "@/pages/hr";
+import Returns from "@/pages/returns";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,6 +60,12 @@ function Router() {
       </Route>
       <Route path="/print-log">
         <ProtectedRoute requireAdmin><PrintLog /></ProtectedRoute>
+      </Route>
+      <Route path="/hr">
+        <ProtectedRoute requireAdmin><HR /></ProtectedRoute>
+      </Route>
+      <Route path="/returns">
+        <ProtectedRoute requireAdmin><Returns /></ProtectedRoute>
       </Route>
       <Route path="/">
         <ProtectedRoute><Pos /></ProtectedRoute>

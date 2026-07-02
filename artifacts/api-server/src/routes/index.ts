@@ -13,6 +13,8 @@ import printConfigRouter from "./print-config";
 import printLogRouter from "./print-log";
 import printersRouter from "./printers";
 import printerSettingsRouter from "./printer-settings";
+import hrRouter from "./hr";
+import returnsRouter from "./returns";
 
 const router: IRouter = Router();
 
@@ -30,5 +32,7 @@ router.use(printConfigRouter);
 router.use(printLogRouter);
 router.use(printersRouter);
 router.use(printerSettingsRouter);
+router.use(hrRouter);
+router.use(returnsRouter);
 
 export default router;

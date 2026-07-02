@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Store, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -41,15 +41,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-muted p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-            <Store className="h-8 w-8 text-primary-foreground" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0f1e3c] p-4">
+      <Card className="w-full max-w-sm shadow-2xl border-0">
+        <CardHeader className="text-center space-y-4 pb-2">
+          <div className="mx-auto w-24 h-24 rounded-full overflow-hidden shadow-lg ring-4 ring-blue-500/30">
+            <img src="/omnisystem-logo.png" alt="OmniSystem" className="w-full h-full object-cover" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">إتقان سوفت</CardTitle>
-            <CardDescription>نظام نقطة المبيعات</CardDescription>
+            <CardTitle className="text-2xl font-extrabold text-[#0f1e3c] tracking-wide">OmniSystem</CardTitle>
+            <CardDescription className="text-sm font-medium text-blue-600">نظام نقطة المبيعات — by UniSoft</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -79,7 +79,7 @@ export default function Login() {
                 className="text-right"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+            <Button type="submit" className="w-full bg-[#0f1e3c] hover:bg-blue-900" disabled={loginMutation.isPending}>
               {loginMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "تسجيل الدخول"}
             </Button>
           </form>

@@ -1,7 +1,7 @@
 import { useAuth } from "@/components/auth-provider";
 import { useLogout } from "@workspace/api-client-react";
 import { useLocation, Link } from "wouter";
-import { LogOut, LayoutDashboard, Package, Tags, Receipt, Users, UserCircle, BarChart3, Settings, Printer, FileText } from "lucide-react";
+import { LogOut, LayoutDashboard, Package, Tags, Receipt, Users, UserCircle, BarChart3, Settings, Printer, FileText, UserCheck, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -27,6 +27,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { name: "العملاء", href: "/customers", icon: Users },
     { name: "المستخدمين", href: "/users", icon: UserCircle },
     { name: "التقارير", href: "/reports", icon: BarChart3 },
+    { name: "الموارد البشرية", href: "/hr", icon: UserCheck },
+    { name: "المرتجعات", href: "/returns", icon: RotateCcw },
     { name: "سجل الطباعة", href: "/print-log", icon: FileText },
     { name: "الإعدادات", href: "/settings", icon: Settings },
   ];

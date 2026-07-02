@@ -265,11 +265,12 @@ export default function Pos() {
   };
 
   // ── إرسال فاتورة قسم مباشرة للطابعة الشبكية ───────────────────────
-  const directPrint = (order: Order, dept: any, items: any[]) =>
+  const directPrint = (order: Order, dept: any, items: any[], printerOverride?: string) =>
     new Promise<void>(resolve => {
       const content = generateDeptReceiptText(order, dept, items, settings);
+      const printerName = printerOverride ?? dept.printerName;
       printReceiptDirect.mutate(
-        { data: { printerName: dept.printerName, content, copies: 1 } },
+        { data: { printerName, content, copies: 1 } },
         {
           onSuccess: (res) => {
             if (!res.ok)
@@ -280,6 +281,51 @@ export default function Pos() {
         }
       );
     });
+
+  // ── طباعة صامتة كاملة للطابعة الشبكية (بدون نافذة حوار) ───────────
+  const silentPrintAll = async (order: Order) => {
+    const mainPrinter = (printerSettings as any)?.mainPrinterName as string | null | undefined;
+    const copiesCount = settings?.masterCopiesCount ?? 1;
+    const enabledCopies = receiptCopies.filter(c => c.enabled);
+    const deptGroups = getDeptGroups(order);
+
+    // 1) الفاتورة الرئيسية → إرسال لطابعة الفاتورة الرئيسية
+    if (mainPrinter) {
+      const masterText = generateReceiptText(order, settings, user?.name ?? "");
+      for (let i = 0; i < copiesCount; i++) {
+        const copyLabel = enabledCopies[i]?.label ?? `نسخة ${i + 1}`;
+        await new Promise<void>(resolve => {
+          printReceiptDirect.mutate(
+            { data: { printerName: mainPrinter, content: masterText, copies: 1 } },
+            {
+              onSuccess: () => resolve(),
+              onError: () => resolve(),
+            }
+          );
+        });
+        createPrintLog.mutate({ data: {
+          orderId: order.id, invoiceNumber: order.invoiceNumber,
+          receiptType: "master", departmentName: copyLabel,
+          printerName: mainPrinter, copies: 1, status: "success", reprintCount: 0,
+        }});
+        if (i < copiesCount - 1) await sleep(200);
+      }
+    }
+
+    // 2) فواتير الأقسام → كل قسم لطابعته
+    for (const { dept, items } of deptGroups) {
+      if (!items.length) continue;
+      for (let c = 0; c < dept.copies; c++) {
+        await directPrint(order, dept, items);
+        createPrintLog.mutate({ data: {
+          orderId: order.id, invoiceNumber: order.invoiceNumber,
+          receiptType: "department", departmentName: dept.categoryName ?? "قسم",
+          printerName: dept.printerName ?? null, copies: 1, status: "success", reprintCount: 0,
+        }});
+        if (c < dept.copies - 1) await sleep(200);
+      }
+    }
+  };
 
   // ── دالة الطباعة الرئيسية (Queue تسلسلي) ──────────────────────────
   const triggerDirectPrint = async (order: Order, isReprint = false, reprintReasonText?: string) => {
@@ -385,10 +431,21 @@ export default function Pos() {
         setNote("");
         setTableNumber("");
 
-        if (autoPrintTrigger === "after_payment") {
+        const mainPrinter = (printerSettings as any)?.mainPrinterName as string | null | undefined;
+        const isFullySilent = autoPrintTrigger === "after_payment" && !!mainPrinter;
+
+        if (isFullySilent) {
+          // طباعة صامتة كاملة — بدون نافذة معاينة أو حوار
+          toast({ title: "✅ تم تأكيد الطلب", description: `${order.invoiceNumber} — جاري الطباعة...` });
+          silentPrintAll(order).then(() => {
+            toast({ title: "🖨️ تمت الطباعة", description: "تمت طباعة جميع الفواتير بنجاح" });
+          });
+        } else if (autoPrintTrigger === "after_payment") {
+          // طباعة تلقائية بعد الدفع مع نافذة المعاينة
           setShowReceipt(true);
           setTimeout(() => triggerDirectPrint(order), 600);
         } else {
+          // إظهار المعاينة فقط (الطباعة يدوية)
           setShowReceipt(true);
         }
       },
@@ -424,125 +481,204 @@ export default function Pos() {
 
   return (
     <PosLayout>
-      {/* Hidden print area — renders ONE page at a time (Queue sequential) */}
+      {/* Hidden print area */}
       <div className="hidden-print-container">
         <div id="receipt-print-area">
           {lastOrder && activePrintPage && (
             <div className="print-page">
               {activePrintPage.type === "master" ? (
-                <MasterReceiptSlip
-                  order={lastOrder}
-                  settings={settings ?? undefined}
-                  cashierName={user?.name}
-                  copyLabel={activePrintPage.copyLabel}
-                />
+                <MasterReceiptSlip order={lastOrder} settings={settings ?? undefined} cashierName={user?.name} copyLabel={activePrintPage.copyLabel} />
               ) : (
-                <DeptReceiptSlip
-                  order={lastOrder}
-                  dept={activePrintPage.dept}
-                  items={activePrintPage.items}
-                  settings={settings ?? undefined}
-                  cashierName={user?.name}
-                />
+                <DeptReceiptSlip order={lastOrder} dept={activePrintPage.dept} items={activePrintPage.items} settings={settings ?? undefined} cashierName={user?.name} />
               )}
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex w-full h-full overflow-hidden" dir="rtl">
-        {/* RIGHT: Products panel */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top bar */}
-          <div className="h-12 bg-white border-b border-slate-200 flex items-center gap-2 px-3">
-            <Input
-              ref={numberInputRef}
-              type="number"
-              placeholder="رقم الصنف + Enter"
-              value={numberInput}
-              onChange={e => setNumberInput(e.target.value)}
-              onKeyDown={handleNumberInput}
-              className="w-36 h-8 text-sm text-center font-bold"
-              dir="ltr"
-            />
+      <div className="flex w-full h-full overflow-hidden bg-[#e8eaf0]" dir="rtl">
 
-            <div className="flex rounded border border-slate-200 overflow-hidden shrink-0">
-              {(["dine-in", "takeout", "delivery"] as OrderType[]).map(t => (
-                <button
-                  key={t}
-                  onClick={() => setOrderType(t)}
-                  className={cn(
-                    "px-3 h-8 text-xs font-medium transition-colors",
-                    orderType === t
-                      ? "bg-primary text-white"
-                      : "hover:bg-slate-50 text-slate-600"
-                  )}
-                >
-                  {ORDER_TYPE_LABELS[t]}
-                </button>
-              ))}
-            </div>
+        {/* ═══ RIGHT PANEL: Categories + Cart ═══ */}
+        <div className="w-[300px] flex flex-col bg-white border-l border-slate-300 shrink-0 shadow-md">
 
-            {orderType === "dine-in" && (
-              <Input
-                placeholder="رقم الطاولة"
-                value={tableNumber}
-                onChange={e => setTableNumber(e.target.value)}
-                className="w-24 h-8 text-sm text-center"
-              />
-            )}
-
-            <div className="flex gap-1 overflow-x-auto flex-1">
+          {/* ── Categories bar ── */}
+          <div className="bg-[#0f1e3c] px-2 py-1.5 shrink-0">
+            <p className="text-[10px] text-blue-300 font-semibold mb-1.5 px-1">المجموعات / الأقسام</p>
+            <div className="flex flex-wrap gap-1">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={cn(
-                  "shrink-0 px-3 h-8 text-xs rounded border font-medium transition-colors",
-                  selectedCategory === null
-                    ? "bg-primary text-white border-primary"
-                    : "border-slate-200 hover:border-primary text-slate-600"
-                )}
-              >
-                الكل
-              </button>
+                className={cn("px-2 py-0.5 text-[11px] rounded font-bold transition-colors",
+                  selectedCategory === null ? "bg-amber-400 text-[#0f1e3c]" : "bg-white/10 text-white hover:bg-white/20")}
+              >الكل</button>
               {categories.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={cn(
-                    "shrink-0 px-3 h-8 text-xs rounded border font-medium transition-colors",
-                    selectedCategory === cat.id
-                      ? "text-white border-transparent"
-                      : "border-slate-200 hover:border-primary text-slate-600"
-                  )}
-                  style={
-                    selectedCategory === cat.id && cat.color
-                      ? { backgroundColor: cat.color, borderColor: cat.color }
-                      : {}
-                  }
-                >
-                  {cat.name}
-                </button>
+                  className={cn("px-2 py-0.5 text-[11px] rounded font-bold transition-colors",
+                    selectedCategory === cat.id ? "bg-amber-400 text-[#0f1e3c]" : "bg-white/10 text-white hover:bg-white/20")}
+                  style={selectedCategory === cat.id && cat.color ? { backgroundColor: cat.color } : {}}
+                >{cat.name}</button>
               ))}
             </div>
           </div>
 
-          {/* Product grid */}
-          <div className="flex-1 overflow-y-auto p-3 bg-slate-100">
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {/* ── Order type + table ── */}
+          <div className="bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center gap-1.5 shrink-0">
+            {(["dine-in", "takeout", "delivery"] as OrderType[]).map(t => (
+              <button key={t} onClick={() => setOrderType(t)}
+                className={cn("flex-1 py-1 text-[11px] font-bold rounded border transition-colors",
+                  orderType === t ? "bg-[#0f1e3c] text-white border-[#0f1e3c]" : "border-slate-300 text-slate-600 hover:border-[#0f1e3c]")}
+              >{ORDER_TYPE_LABELS[t]}</button>
+            ))}
+            {orderType === "dine-in" && (
+              <Input placeholder="طاولة" value={tableNumber} onChange={e => setTableNumber(e.target.value)}
+                className="w-16 h-7 text-xs text-center border-slate-300" />
+            )}
+          </div>
+
+          {/* ── Cart table header ── */}
+          <div className="grid grid-cols-[1fr_40px_70px_24px] bg-[#0f1e3c] text-white text-[11px] font-bold px-2 py-1 shrink-0">
+            <span>الصنف</span>
+            <span className="text-center">الكمية</span>
+            <span className="text-center">السعر</span>
+            <span />
+          </div>
+
+          {/* ── Cart rows ── */}
+          <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+            {cart.length === 0 && (
+              <div className="py-12 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
+                <ShoppingCart className="w-8 h-8 opacity-30" />
+                <span>اضغط على منتج للإضافة</span>
+              </div>
+            )}
+            {cart.map((item, idx) => (
+              <div key={item.product.id}
+                className={cn("grid grid-cols-[1fr_40px_70px_24px] items-center px-2 py-1 gap-0.5",
+                  idx % 2 === 0 ? "bg-white" : "bg-amber-50/60")}
+              >
+                <span className="text-[11px] font-semibold text-slate-800 truncate leading-tight">{item.product.name}</span>
+                <div className="flex flex-col items-center gap-0.5">
+                  <button onClick={() => changeQty(item.product.id, 1)}
+                    className="w-5 h-4 bg-green-100 hover:bg-green-200 rounded text-green-700 flex items-center justify-center leading-none">
+                    <Plus className="w-2.5 h-2.5" />
+                  </button>
+                  <span className="text-[12px] font-extrabold text-slate-800 tabular-nums">{item.quantity}</span>
+                  <button onClick={() => changeQty(item.product.id, -1)}
+                    className="w-5 h-4 bg-red-100 hover:bg-red-200 rounded text-red-600 flex items-center justify-center leading-none">
+                    <Minus className="w-2.5 h-2.5" />
+                  </button>
+                </div>
+                <span className="text-[11px] font-bold text-amber-700 text-center tabular-nums">
+                  {(item.product.price * item.quantity).toLocaleString()}
+                </span>
+                <button onClick={() => removeFromCart(item.product.id)}
+                  className="w-5 h-5 rounded hover:bg-red-100 flex items-center justify-center text-red-400">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Note ── */}
+          {cart.length > 0 && (
+            <div className="px-2 py-1.5 border-t border-slate-100">
+              <Input placeholder="ملاحظة..." value={note} onChange={e => setNote(e.target.value)}
+                className="h-7 text-xs border-slate-200" />
+            </div>
+          )}
+
+          {/* ── Totals ── */}
+          <div className="bg-slate-50 border-t border-slate-200 px-2 py-2 space-y-1 shrink-0">
+            <div className="flex justify-between text-[11px] text-slate-500">
+              <span>المجموع الفرعي</span>
+              <span className="tabular-nums font-semibold">{subtotal.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-slate-500">
+              <span>الخصم</span>
+              <Input type="number" value={discount} onChange={e => setDiscount(Number(e.target.value))}
+                className="w-20 h-5 text-xs text-center border-slate-200 p-0" min={0} />
+            </div>
+            {taxRate > 0 && (
+              <div className="flex justify-between text-[11px] text-slate-500">
+                <span>ضريبة {taxRate}%</span>
+                <span className="tabular-nums">{taxAmt.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-extrabold text-sm bg-[#0f1e3c] text-white rounded px-2 py-1 mt-1">
+              <span>الإجمالي</span>
+              <span className="tabular-nums text-amber-300">{total.toFixed(2)} {currency}</span>
+            </div>
+
+            {/* Payment method */}
+            <div className="flex gap-1 pt-0.5">
+              {(["cash", "card", "mixed"] as const).map(m => (
+                <button key={m} onClick={() => setPaymentMethod(m)}
+                  className={cn("flex-1 py-1 text-[11px] rounded border font-bold transition-colors",
+                    paymentMethod === m ? "bg-blue-700 text-white border-blue-700" : "border-slate-300 text-slate-600 hover:border-blue-500")}
+                >{m === "cash" ? "نقدي" : m === "card" ? "شبكة" : "مختلط"}</button>
+              ))}
+            </div>
+
+            <div className="flex gap-1.5 pt-0.5">
+              <button onClick={() => setCart([])} disabled={cart.length === 0}
+                className="px-3 h-9 text-xs rounded border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-40 font-bold transition-colors">
+                إلغاء
+              </button>
+              <Button
+                className="flex-1 h-9 bg-green-600 hover:bg-green-700 text-white font-extrabold text-sm tracking-wide shadow"
+                disabled={cart.length === 0 || createOrderMutation.isPending}
+                onClick={handlePay}
+              >
+                دفع
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ MAIN: Products panel ═══ */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+
+          {/* ── Top bar: number input ── */}
+          <div className="h-10 bg-[#0f1e3c] border-b border-slate-700 flex items-center gap-3 px-3 shrink-0">
+            <span className="text-white/60 text-xs font-medium shrink-0">رقم الصنف:</span>
+            <Input
+              ref={numberInputRef}
+              type="number"
+              placeholder="اكتب الرقم + Enter"
+              value={numberInput}
+              onChange={e => setNumberInput(e.target.value)}
+              onKeyDown={handleNumberInput}
+              className="w-40 h-7 text-sm text-center font-bold bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white focus:text-slate-900"
+              dir="ltr"
+            />
+            {cart.length > 0 && (
+              <span className="text-amber-300 text-xs font-bold mr-auto">
+                {cart.length} صنف — {total.toFixed(0)} {currency}
+              </span>
+            )}
+          </div>
+
+          {/* ── Product grid ── */}
+          <div className="flex-1 overflow-y-auto p-2 bg-[#e8eaf0]">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
               {filteredProducts.map(prod => (
                 <button
                   key={prod.id}
                   onClick={() => addToCart(prod)}
-                  className="bg-white border-2 border-slate-300 rounded-xl p-3 text-center hover:border-primary hover:shadow-lg hover:bg-primary/5 transition-all duration-150 cursor-pointer flex flex-col items-center gap-2 active:scale-95 group shadow-sm"
+                  className="bg-amber-400 hover:bg-amber-300 active:scale-95 border border-amber-500 hover:border-amber-400 rounded-lg p-0 text-center transition-all duration-100 cursor-pointer flex flex-col overflow-hidden shadow-sm hover:shadow-md"
                 >
-                  <span className="text-sm font-extrabold text-primary bg-primary/10 rounded-lg px-3 py-1 w-full text-center group-hover:bg-primary group-hover:text-white transition-colors">
-                    {prod.number}
-                  </span>
-                  <span className="text-sm font-bold leading-snug text-center line-clamp-2 text-slate-900 min-h-[2.5rem] flex items-center justify-center">{prod.name}</span>
-                  <span className="text-base font-extrabold text-amber-600 tabular-nums">{prod.price.toLocaleString()}</span>
-                  {prod.categoryName && (
-                    <span className="text-[11px] font-medium text-slate-500 bg-slate-100 rounded-md px-2 py-0.5 leading-none">{prod.categoryName}</span>
-                  )}
+                  {/* Price + number line */}
+                  <div className="bg-amber-500/60 w-full px-1.5 py-1 text-center">
+                    <span className="text-[12px] font-extrabold text-[#0f1e3c] tabular-nums leading-none">
+                      {prod.price.toLocaleString()}
+                      <span className="text-[10px] font-bold text-slate-700 mr-1">({prod.number})</span>
+                    </span>
+                  </div>
+                  {/* Name */}
+                  <div className="flex-1 flex items-center justify-center px-1.5 py-2">
+                    <span className="text-[12px] font-bold text-[#0f1e3c] leading-tight text-center line-clamp-2">{prod.name}</span>
+                  </div>
                 </button>
               ))}
               {filteredProducts.length === 0 && (
@@ -550,137 +686,6 @@ export default function Pos() {
                   لا توجد منتجات في هذه الفئة
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* LEFT: Cart panel */}
-        <div className="w-72 flex flex-col bg-white border-r border-slate-200 shrink-0">
-          {/* Cart header */}
-          <div className="h-12 bg-primary px-3 flex items-center gap-2 shrink-0">
-            <ShoppingCart className="w-4 h-4 text-white/80" />
-            <span className="font-bold text-white text-sm flex-1">قائمة الطلب</span>
-            {orderType !== "dine-in" && (
-              <Badge className="bg-white/20 text-white text-xs border-0">{ORDER_TYPE_LABELS[orderType]}</Badge>
-            )}
-            {tableNumber && (
-              <Badge className="bg-amber-400 text-white text-xs border-0">ط {tableNumber}</Badge>
-            )}
-            {cart.length > 0 && (
-              <span className="bg-white/20 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">{cart.length}</span>
-            )}
-          </div>
-
-          {/* Cart items */}
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-            {cart.length === 0 && (
-              <div className="py-16 text-center text-slate-400 text-sm">
-                اضغط على منتج للإضافة
-              </div>
-            )}
-            {cart.map(item => (
-              <div key={item.product.id} className="px-3 py-2 flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 truncate">{item.product.name}</p>
-                  <p className="text-xs text-amber-600 tabular-nums">
-                    {item.product.price.toLocaleString()} × {item.quantity} = {(item.product.price * item.quantity).toLocaleString()}
-                  </p>
-                </div>
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <button
-                    onClick={() => changeQty(item.product.id, -1)}
-                    className="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600"
-                  >
-                    <Minus className="w-2.5 h-2.5" />
-                  </button>
-                  <span className="w-7 text-center text-xs font-bold text-slate-800">{item.quantity}</span>
-                  <button
-                    onClick={() => changeQty(item.product.id, 1)}
-                    className="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600"
-                  >
-                    <Plus className="w-2.5 h-2.5" />
-                  </button>
-                  <button
-                    onClick={() => removeFromCart(item.product.id)}
-                    className="w-5 h-5 rounded hover:bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 mr-0.5"
-                  >
-                    <X className="w-2.5 h-2.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Note */}
-          {cart.length > 0 && (
-            <div className="px-3 pb-2">
-              <Input
-                placeholder="ملاحظة على الطلب..."
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                className="h-8 text-xs border-slate-200"
-              />
-            </div>
-          )}
-
-          {/* Totals */}
-          <div className="border-t border-slate-200 p-3 space-y-1.5 bg-slate-50 shrink-0">
-            <div className="flex justify-between text-xs text-slate-600">
-              <span>المجموع</span>
-              <span className="tabular-nums">{subtotal.toLocaleString()} {currency}</span>
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-600">
-              <span>خصم</span>
-              <Input
-                type="number"
-                value={discount}
-                onChange={e => setDiscount(Number(e.target.value))}
-                className="w-20 h-6 text-xs text-center border-slate-200"
-                min={0}
-              />
-            </div>
-            <div className="flex justify-between text-xs text-slate-600">
-              <span>ضريبة ({taxRate}%)</span>
-              <span className="tabular-nums">{taxAmt.toFixed(2)} {currency}</span>
-            </div>
-            <div className="flex justify-between font-bold text-sm border-t border-slate-200 pt-1.5">
-              <span>الإجمالي</span>
-              <span className="text-amber-600 tabular-nums">{total.toFixed(2)} {currency}</span>
-            </div>
-
-            {/* Payment method */}
-            <div className="flex gap-1 pt-0.5">
-              {(["cash", "card", "mixed"] as const).map(m => (
-                <button
-                  key={m}
-                  onClick={() => setPaymentMethod(m)}
-                  className={cn(
-                    "flex-1 py-1 text-xs rounded border transition-colors font-medium",
-                    paymentMethod === m
-                      ? "bg-primary text-white border-primary"
-                      : "border-slate-200 hover:border-primary text-slate-600"
-                  )}
-                >
-                  {m === "cash" ? "نقداً" : m === "card" ? "شبكة" : "مختلط"}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={() => setCart([])}
-                disabled={cart.length === 0}
-                className="px-3 h-9 text-xs rounded border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors"
-              >
-                مسح
-              </button>
-              <Button
-                className="flex-1 h-9 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm"
-                disabled={cart.length === 0 || createOrderMutation.isPending}
-                onClick={handlePay}
-              >
-                دفع
-              </Button>
             </div>
           </div>
         </div>

@@ -165,12 +165,30 @@ export default function Settings() {
                   onChange={e => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    if (file.size > 500 * 1024) {
-                      toast({ variant: "destructive", title: "حجم الصورة كبير", description: "يرجى اختيار صورة أصغر من 500KB" });
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast({ variant: "destructive", title: "حجم الصورة كبير جداً", description: "الحد الأقصى 5MB" });
                       return;
                     }
                     const reader = new FileReader();
-                    reader.onload = ev => setField("logoUrl", ev.target?.result as string ?? null);
+                    reader.onload = ev => {
+                      const img = new Image();
+                      img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        const MAX = 400;
+                        let w = img.width, h = img.height;
+                        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+                        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext("2d")!;
+                        ctx.fillStyle = "#fff";
+                        ctx.fillRect(0, 0, w, h);
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const compressed = canvas.toDataURL("image/jpeg", 0.75);
+                        setField("logoUrl", compressed);
+                        toast({ title: "تم رفع الشعار", description: `${Math.round(compressed.length / 1024)}KB` });
+                      };
+                      img.src = ev.target?.result as string;
+                    };
                     reader.readAsDataURL(file);
                   }}
                 />
@@ -761,19 +779,19 @@ function PrinterLayoutTab() {
   const { data: saved } = useGetPrinterSettings();
   const updateMutation = useUpdatePrinterSettings();
 
-  const defaults: PrinterSettingsInput = {
+  const defaults: PrinterSettingsInput & { mainPrinterName?: string | null } = {
     paperWidth: 80, leftMargin: 4, rightMargin: 4,
     topMargin: 2, bottomMargin: 2, fontSize: 10,
-    lineSpacing: 2, charactersPerLine: 48,
+    lineSpacing: 2, charactersPerLine: 48, mainPrinterName: null,
   };
 
-  const [form, setForm] = useState<PrinterSettingsInput>(defaults);
+  const [form, setForm] = useState<PrinterSettingsInput & { mainPrinterName?: string | null }>(defaults);
 
   useEffect(() => {
-    if (saved) setForm({ ...defaults, ...saved });
+    if (saved) setForm({ ...defaults, ...(saved as any) });
   }, [saved]);
 
-  const set = (k: keyof PrinterSettingsInput, v: number) =>
+  const set = (k: string, v: number | string | null) =>
     setForm(f => ({ ...f, [k]: v }));
 
   const handleSave = () => {
@@ -869,6 +887,29 @@ function PrinterLayoutTab() {
           {numField("حجم الخط", "fontSize", "px", 6, 20, 1)}
           {numField("مسافة السطر", "lineSpacing", "px", 1, 10, 0.5)}
           {numField("عدد الأحرف بالسطر", "charactersPerLine", "حرف", 20, 80, 1)}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>طابعة الفاتورة الرئيسية</CardTitle>
+          <CardDescription>
+            عند ضبط هذه الطابعة، ستُطبع الفاتورة الرئيسية <strong>بصمت تلقائياً</strong> دون أي نافذة حوار — وذلك عند اختيار "بعد الدفع مباشرة" في إعدادات الطباعة التلقائية.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-1">
+            <label className="text-sm font-medium">اسم الطابعة أو عنوان IP</label>
+            <Input
+              value={(form as any).mainPrinterName ?? ""}
+              onChange={e => set("mainPrinterName", e.target.value || null)}
+              placeholder="مثال: 192.168.1.100 أو اسم الطابعة"
+              dir="ltr"
+            />
+            <p className="text-xs text-muted-foreground">
+              اتركه فارغاً لاستخدام نافذة الطباعة العادية للفاتورة الرئيسية.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
